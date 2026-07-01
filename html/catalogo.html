@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineManiaci - Catalogo Film</title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
+        nav { background: #0f172a; padding: 15px; display: flex; gap: 20px; justify-content: center; }
+        nav a { color: #f8fafc; text-decoration: none; font-weight: bold; font-size: 16px; }
+        nav a:hover { color: #38bdf8; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 20px; }
+        .search-box, .form-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; gap: 10px; align-items: center; }
+        .form-box { flex-direction: column; align-items: flex-start; }
+        input, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 97%; }
+        input[type="text"] { width: 300px; }
+        button { padding: 10px 20px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0369a1; }
+        .grid-catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; margin-top: 20px; }
+        .card-film { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-film img { max-width: 100%; height: 260px; object-fit: cover; border-radius: 6px; }
+        .scheda-tecnica { display: none; background: #ffffff; border: 2px solid #0284c7; padding: 30px; border-radius: 12px; margin-top: 30px; }
+        .commento-item { background: #f1f5f9; padding: 10px; border-radius: 6px; margin: 5px 0; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="catalogo.html">🎬 Catalogo</a>
+        <a href="playlist.html">📂 Mie Playlist</a>
+        <a href="login.html">🔑 Autenticazione</a>
+    </nav>
+
+    <div class="container">
+        <h1>🎬 Archivio CineManiaci</h1>
+        
+        <div class="search-box">
+            <input type="text" id="campoCerca" placeholder="Cerca un titolo (es. Inception)...">
+            <button onclick="avviaRicerca()">Filtra Film</button>
+        </div>
+
+        <div class="form-box" id="boxInserimentoFilm" style="display:none;">
+            <h3>➕ Non trovi il film? Aggiungilo Ora</h3>
+            <input type="text" id="newTitolo" placeholder="Titolo" style="width:97%">
+            <textarea id="newTrama" placeholder="Trama film..." style="width:97%; height:60px; margin: 5px 0;"></textarea>
+            <div style="display:flex; gap:10px; width:100%">
+                <input type="number" id="newAnno" placeholder="Anno" style="width:20%">
+                <input type="text" id="newPoster" placeholder="URL Locandina" style="width:50%">
+                <input type="text" id="newTmdb" placeholder="ID TMDB" style="width:25%">
+            </div>
+            <button onclick="inserisciFilmManuale()" style="margin-top:10px; background:#16a34a">Carica nel DB</button>
+        </div>
+
+        <h2>Risultati Ricerca</h2>
+        <div id="risultati" class="grid-catalogo"></div>
+
+        <div id="schedaFilm" class="scheda-tecnica">
+            <h2 id="schedaTitolo" style="color: #0284c7; margin-top:0;"></h2>
+            <div style="display:flex; gap:20px;">
+                <img id="schedaImmagine" src="" style="width:200px; border-radius:6px; object-fit:cover;">
+                <div>
+                    <p><b>Anno di Uscita:</b> <span id="schedaAnno"></span></p>
+                    <p><b>Trama:</b></p>
+                    <p id="schedaTrama" style="font-style:italic; color:#475569;"></p>
+                </div>
+            </div>
+            
+            <hr style="margin:20px 0; border:0; height:1px; background:#cbd5e1;">
+            
+            <h3>📺 Video community e recensioni YouTube</h3>
+            <div id="listaCommenti"></div>
+
+            <div id="formRecensione" style="margin-top:20px; display:none; background:#f8fafc; padding:15px; border-radius:8px;">
+                <h4>Aggiungi la tua video recensione</h4>
+                <input type="text" id="recUrl" placeholder="URL Video YouTube (es: https://youtube.com/...)" style="width:95%; margin-bottom:5px;">
+                <textarea id="recTesto" placeholder="Inserisci il tuo commento testuale..." style="width:95%; height:50px; margin-bottom:10px;"></textarea>
+                <input type="hidden" id="recFilmId">
+                <button onclick="inviaCommentoVideo()" style="background:#16a34a">Invia Video Recensione</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "...";
+        const token = localStorage.getItem("session_token"); 
+
+        // Mostra i form di inserimento dati solo se l'utente ha effettuato il login
+        if(token) {
+            document.getElementById("boxInserimentoFilm").style.display = "block";
+            document.getElementById("formRecensione").style.display = "block";
+        }
+
+        async function avviaRicerca() {
+            let ricerca = document.getElementById("campoCerca").value.trim();
+            let contenitore = document.getElementById("risultati");
+            contenitore.innerHTML = "";
+
+            // Chiamata all'endpoint cerca con parametro query [cite: 38]
+            let url = ricerca === "" ? `${API_URL}/film` : `${API_URL}/film/cerca?keyword=${encodeURIComponent(ricerca)}`; 
+            let reply = await fetch(url);
+            let film = await reply.json();
+
+            if (film.length === 0) {
+                contenitore.innerHTML = "<p>Nessun film trovato nel database locale.</p>";
+                return;
+            }
+
+            for (let f of film) { 
+                let div = document.createElement("div");
+                div.className = "card-film";
+                
+                let img = document.createElement("img");
+                img.src = f.url_locandina || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=400";
+                
+                let titolo = document.createElement("h3");
+                titolo.textContent = f.titolo; 
+
+                let btn = document.createElement("button");
+                btn.textContent = "Apri Scheda";
+                btn.onclick = () => apriScheda(f.id); 
+
+                div.appendChild(img);
+                div.appendChild(titolo);
+                div.appendChild(btn);
+                contenitore.appendChild(div);    
+            }
+        }
+
+        async function apriScheda(idFilm) {
+            let reply = await fetch(`${API_URL}/film/${idFilm}`); 
+            if(reply.ok){
+                let dati = await reply.json();
+                let f = dati.film;
+                let commenti = dati.commenti;
+
+                document.getElementById("schedaTitolo").textContent = f.titolo;
+                document.getElementById("schedaAnno").textContent = f.anno;
+                document.getElementById("schedaTrama").textContent = f.trama; 
+                document.getElementById("schedaImmagine").src = f.url_locandina;
+                document.getElementById("recFilmId").value = f.id;
+
+                let boxCommenti = document.getElementById("listaCommenti");
+                boxCommenti.innerHTML = commenti.length === 0 ? "<p>Non ci sono video abbinati per ora.</p>" : "";
+                
+                commenti.forEach(c => {
+                    let d = document.createElement("div");
+                    d.className = "commento-item";
+                    d.innerHTML = `🎥 <b>Video:</b> <a href="${c.url_video_youtube}" target="_blank">${c.url_video_youtube}</a> <br> 💬 <b>Nota:</b> ${c.commento}`;
+                    boxCommenti.appendChild(d);
+                });
+
+                document.getElementById("schedaFilm").style.display = "block"; 
+                document.getElementById("schedaFilm").scrollIntoView({ behavior: "smooth"});
+            }
+        }
+
+        async function inserisciFilmManuale() {
+            let titolo = document.getElementById("newTitolo").value.trim();
+            let trama = document.getElementById("newTrama").value.trim();
+            let anno = document.getElementById("newAnno").value;
+            let url_locandina = document.getElementById("newPoster").value.trim();
+            let tmdb_id = document.getElementById("newTmdb").value.trim();
+
+            if(!titolo || !trama) { alert("Inserisci titolo e trama!"); return; }
+
+            let reply = await fetch(`${API_URL}/film?token=${token}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ titolo, trama, anno: parseInt(anno), url_locandina, tmdb_id })
+            });
+
+            if(reply.ok) {
+                alert("Film inserito correttamente!");
+                location.reload();
+            } else { alert("Errore di caricamento."); }
+        }
+
+        async function inviaCommentoVideo() {
+            let idFilm = document.getElementById("recFilmId").value;
+            let urlVideo = document.getElementById("recUrl").value.trim();
+            let commento = document.getElementById("recTesto").value.trim();
+
+            if(!urlVideo || !commento) { alert("Completa i campi recensione!"); return; }
+
+            let reply = await fetch(`${API_URL}/film/${idFilm}/commento?token=${token}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url_video_youtube: urlVideo, commento: commento })
+            });
+
+            if(reply.ok) {
+                alert("Recensione inserita!");
+                apriScheda(idFilm);
+                document.getElementById("recUrl").value = "";
+                document.getElementById("recTesto").value = "";
+            }
+        }
+
+        window.onload = avviaRicerca;
+    </script>
+</body>
+</html>
