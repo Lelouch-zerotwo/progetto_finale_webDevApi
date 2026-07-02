@@ -82,15 +82,6 @@
 
     <script>
         const API_URL = "https://bookish-goggles-5vgg74gxjgww2r5w-8000.app.github.dev";
-        /*
-        const API_URL = (() => {
-            const currentOrigin = window.location.origin;
-            if (currentOrigin.includes("8000")) {
-                return currentOrigin;
-            }     
-            return currentOrigin.replace(/:\d+$/, ":8000");
-        })();
-        */
         const token = localStorage.getItem("session_token"); 
 
         // Mostra i form di inserimento dati solo se l'utente ha effettuato il login

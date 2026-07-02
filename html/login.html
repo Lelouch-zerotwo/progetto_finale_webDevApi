@@ -67,8 +67,10 @@
         async function eseguiRegistrazione() {
             let user = document.getElementById("regUser").value.trim();
             let pass = document.getElementById("regPass").value.trim();
-            if(!user || !pass) 
-                alert("Compila tutti i campi!"); return; 
+            if(!user || !pass){
+                alert("Compila tutti i campi!"); 
+                return; 
+            }
 
             let risposta = await fetch(`${API_URL}/register`, {
                 method: "POST",
@@ -88,8 +90,10 @@
         async function eseguiLogin() {
             let user = document.getElementById("logUser").value.trim();
             let pass = document.getElementById("logPass").value.trim();
-            if(!user || !pass) 
-                alert("Inserisci le credenziali!"); return; 
+            if(!user || !pass){
+                alert("Inserisci le credenziali!"); 
+                return; 
+            }
 
             let risposta = await fetch(`${API_URL}/login`, {
                 method: "POST",
