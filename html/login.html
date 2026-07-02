@@ -4,20 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineManiaci - Login & Register</title>
-    <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
-        nav { background: #0f172a; padding: 15px; display: flex; gap: 20px; justify-content: center; }
-        nav a { color: #f8fafc; text-decoration: none; font-weight: bold; font-size: 16px; }
-        nav a:hover { color: #38bdf8; }
-        .container { max-width: 500px; margin: 40px auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        h1, h3 { text-align: center; color: #0f172a; }
-        .card { background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        input { width: 95%; padding: 10px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
-        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s; }
-        button:hover { background: #1d4ed8; }
-        .btn-logout { background: #ef4444; margin-top: 10px; }
-        .btn-logout:hover { background: #dc2626; }
-    </style>
+    <link rel="stylesheet" href="../css/for_all.css">
+    <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
 
@@ -29,7 +17,7 @@
 
     <div class="container">
         <h1>🔐 Area Utente</h1>
-        <hr style="border: 0; height: 1px; background: #e2e8f0; margin-bottom: 20px;">
+        <hr class="login-divider">
 
         <div class="card">
             <h3>1. Registra Account</h3>
@@ -46,79 +34,9 @@
             <button class="btn-logout" onclick="eseguiLogout()">Esci (Logout)</button>
         </div>
         
-        <div id="statoSessione" style="text-align: center; font-weight: bold; margin-top: 15px;"></div>
+        <div id="statoSessione"></div>
     </div>
-
-    <script>
-        const API_URL = "https://bookish-goggles-5vgg74gxjgww2r5w-8000.app.github.dev";
-
-        function controllaStato() {
-            const token = localStorage.getItem("session_token");
-            const box = document.getElementById("statoSessione");
-            if(token) {
-                box.style.color = "#16a34a";
-                box.textContent = "Sessione attiva. Sei loggato!";
-            } else {
-                box.style.color = "#dc2626";
-                box.textContent = "Nessun utente connesso.";
-            }
-        }
-
-        async function eseguiRegistrazione() {
-            let user = document.getElementById("regUser").value.trim();
-            let pass = document.getElementById("regPass").value.trim();
-            if(!user || !pass){
-                alert("Compila tutti i campi!"); 
-                return; 
-            }
-
-            let risposta = await fetch(`${API_URL}/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: user, password: pass })
-            });
-
-            let dati = await risposta.json();
-            if(risposta.ok) {
-                alert("Registrazione completata!");
-                document.getElementById("regUser").value = "";
-                document.getElementById("regPass").value = "";
-            } else 
-                alert("Errore: " + dati.detail); 
-        }
-
-        async function eseguiLogin() {
-            let user = document.getElementById("logUser").value.trim();
-            let pass = document.getElementById("logPass").value.trim();
-            if(!user || !pass){
-                alert("Inserisci le credenziali!"); 
-                return; 
-            }
-
-            let risposta = await fetch(`${API_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: user, password: pass })
-            });
-
-            let dati = await risposta.json();
-            if(risposta.ok) {
-                localStorage.setItem("session_token", dati.token);
-                alert("Accesso autorizzato!");
-                document.getElementById("logUser").value = "";
-                document.getElementById("logPass").value = "";
-                controllaStato();
-            } else 
-                alert("Accesso negato: " + dati.detail); 
-        }
-
-        function eseguiLogout() {
-            localStorage.removeItem("session_token");
-            alert("Logout effettuato.");
-            controllaStato();
-        }
-
-        window.onload = controllaStato;
-    </script>
+    
+    <script src="../js/login.js" defer></script>
 </body>
 </html>

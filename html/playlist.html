@@ -4,22 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineManiaci - Raccolte Personali</title>
-    <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
-        nav { background: #0f172a; padding: 15px; display: flex; gap: 20px; justify-content: center; }
-        nav a { color: #f8fafc; text-decoration: none; font-weight: bold; font-size: 16px; }
-        nav a:hover { color: #38bdf8; }
-        .container { max-width: 900px; margin: 30px auto; padding: 20px; }
-        .box { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-right: 10px; }
-        button { padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #1d4ed8; }
-        ul { list-style-type: none; padding: 0; }
-        li { padding: 12px; background: #f1f5f9; margin-bottom: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        li:hover { background: #e2e8f0; }
-        .grid-playlist-film { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-        .mini-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; }
-    </style>
+    <link rel="stylesheet" href="../css/for_all.css">
+    <link rel="stylesheet" href="../css/playlist.css">
 </head>
 <body>
 
@@ -32,14 +18,14 @@
     <div class="container">
         <h1>📂 Gestione Playlist Personali</h1>
         
-        <div id="areaBloccata" style="display:none; color:#dc2626; font-weight:bold; text-align:center; padding: 40px; background:white; border-radius:8px;">
+        <div id="areaBloccata">
             ⚠️ Devi effettuare l'accesso per visualizzare e creare le tue playlist video.
         </div>
 
-        <div id="areaContenuto" style="display:none;">
+        <div id="areaContenuto">
             <div class="box">
                 <h3>➕ Crea una nuova Playlist</h3> 
-                <input type="text" id="nomePlaylist" placeholder="Es. I miei preferiti sci-fi" style="width: 250px;">
+                <input type="text" id="nomePlaylist" class="input-playlist" placeholder="Es. I miei preferiti sci-fi">
                 <button onclick="creaNuovaPlaylist()">Salva Playlist</button> 
             </div>
 
@@ -48,13 +34,13 @@
                 <ul id="listaPlaylist"></ul> 
             </div>
 
-            <div class="box" id="sezioneDettaglio" style="display:none; border-top: 4px solid #2563eb;">
-                <h2 id="titoloPlaylistAttiva" style="color:#1e3a8a; margin-top:0;"></h2>
+            <div class="box" id="sezioneDettaglio">
+                <h2 id="titoloPlaylistAttiva"></h2>
                 
-                <div style="background:#f1f5f9; padding:15px; border-radius:6px; margin-bottom:20px;">
+                <div class="associa-film-box">
                     <h4>Associa un film dal database a questa lista</h4>
-                    <select id="selectFilm" style="width: 250px;"></select>
-                    <button onclick="aggiungiFilmAPlaylist()" style="background:#16a34a">Collega Film</button>
+                    <select id="selectFilm" class="select-film"></select>
+                    <button class="btn-success" onclick="aggiungiFilmAPlaylist()">Collega Film</button>
                 </div>
 
                 <h3>Film inclusi in questa Raccolta:</h3>
@@ -63,99 +49,6 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = "https://bookish-goggles-5vgg74gxjgww2r5w-8000.app.github.dev";
-        const token = localStorage.getItem("session_token");
-        let playlistSelezionata = "";
-
-        if(!token) {
-            document.getElementById("areaBloccata").style.display = "block";
-        } else {
-            document.getElementById("areaContenuto").style.display = "block";
-            caricaPlaylist();
-            caricaSelettoreFilm();
-        }
-
-        // 1. Legge le playlist dal Back-end 
-        async function caricaPlaylist() {
-            let res = await fetch(`${API_URL}/playlist?token=${token}`); 
-            let liste = await res.json(); 
-            let ul = document.getElementById("listaPlaylist");
-            ul.innerHTML = liste.length === 0 ? "<p>Non hai ancora creato nessuna playlist.</p>" : "";
-
-            liste.forEach(l => {
-                let li = document.createElement("li");
-                li.textContent = l.titolo_playlist;
-                li.onclick = () => mostraDettaglio(l.titolo_playlist);
-                ul.appendChild(li);
-            });
-        }
-
-        // 2. Crea una nuova playlist 
-        async function creaNuovaPlaylist() {
-            let titolo = document.getElementById("nomePlaylist").value.trim();
-            if(!titolo) return;
-
-            let res = await fetch(`${API_URL}/playlist?token=${token}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ titolo_playlist: titolo })
-            });
-
-            if(res.ok) {
-                alert("Playlist registrata!");
-                document.getElementById("nomePlaylist").value = "";
-                caricaPlaylist();
-            }
-        }
-
-        // 3. Mostra i film associati tramite JOIN alla playlist cliccata 
-        async function mostraDettaglio(titolo) {
-            playlistSelezionata = titolo;
-            document.getElementById("titoloPlaylistAttiva").textContent = "Dettaglio: " + titolo;
-            
-            let res = await fetch(`${API_URL}/playlist/dettaglio?titolo=${encodeURIComponent(titolo)}&token=${token}`);
-            let film = await res.json();
-            
-            let grid = document.getElementById("gridFilmPlaylist");
-            grid.innerHTML = film.length === 0 ? "<p style='grid-column: 1/-1;'>Questa playlist è vuota. Aggiungi dei film!</p>" : "";
-
-            film.forEach(f => {
-                let card = document.createElement("div");
-                card.className = "mini-card";
-                card.innerHTML = `<img src="${f.url_locandina}" style="width:100%; height:120px; object-fit:cover; border-radius:4px;"><br><b>${f.titolo}</b> (${f.anno})`;
-                grid.appendChild(card);
-            });
-
-            document.getElementById("sezioneDettaglio").style.display = "block";
-        }
-
-        // 4. Popola il menu a tendina (select) prendendo tutti i film esistenti
-        async function caricaSelettoreFilm() {
-            let res = await fetch(`${API_URL}/film`);
-            let film = await res.json();
-            let select = document.getElementById("selectFilm");
-            select.innerHTML = "";
-            film.forEach(f => {
-                let opt = document.createElement("option");
-                opt.value = f.id;
-                opt.textContent = f.titolo;
-                select.appendChild(opt);
-            });
-        }
-
-        // 5. Salva la relazione film-playlist 
-        async function aggiungiFilmAPlaylist() {
-            let idFilm = document.getElementById("selectFilm").value;
-            if(!idFilm || !playlistSelezionata) return;
-
-            let res = await fetch(`${API_URL}/playlist/aggiungi-film?titolo_p=${encodeURIComponent(playlistSelezionata)}&id_f=${idFilm}&token=${token}`, {method: "POST"});
-
-            if(res.ok) {
-                alert("Film abbinato!");
-                mostraDettaglio(playlistSelezionata);
-            }
-        }
-    </script>
+    <script src="../js/playlist.js" defer></script>
 </body>
 </html>
