@@ -80,3 +80,4 @@ def dbinit():
 
         conn.commit()
         print("Inseriti con successo 15 film di prova nel database!")
+        conn.close()

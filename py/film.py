@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
-from classi_validazione import FilmIn, ElementoVideoIn
+from .classi_validazione import FilmIn, ElementoVideoIn
 import sqlite3
 
 router = APIRouter()

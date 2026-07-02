@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from classi_validazione import UtenteAuth
+from .classi_validazione import UtenteAuth
 import sqlite3
 import hashlib
 import secrets

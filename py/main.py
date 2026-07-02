@@ -1,9 +1,9 @@
 from fastapi import FastAPI 
 from fastapi.middleware.cors import CORSMiddleware
-from db import dbinit
-from film import router as film_router
-from utente import router as utente_router
-from playlist import router as playlist_router
+from .db import dbinit
+from .film import router as film_router
+from .utente import router as utente_router
+from .playlist import router as playlist_router
 
 # Inizializzazione fisica del DB SQLite
 dbinit()

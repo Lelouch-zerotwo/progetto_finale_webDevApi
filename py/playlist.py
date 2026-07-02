@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from classi_validazione import PlaylistIn
+from .classi_validazione import PlaylistIn
 import sqlite3
 
 router = APIRouter()
