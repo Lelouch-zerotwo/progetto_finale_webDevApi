@@ -4,7 +4,11 @@ def dbinit():
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
     
-    # 1. Tabella Film [cite: 9, 14]
+    # IMPORTANTE: Abilita il supporto alle chiavi esterne in SQLite
+    cursor.execute("PRAGMA foreign_keys = ON;")
+    
+    # 1. Tabella Film
+    # Ho aggiunto la colonna "url_trailer" per memorizzare il trailer di YouTube direttamente legato al film
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS film (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -12,42 +16,63 @@ def dbinit():
             trama TEXT,
             anno INTEGER,
             url_locandina TEXT,
+            url_video_youtube TEXT, 
             tmdb_id TEXT
         )
     """)
     
-    # 2. Tabella Utenti (con colonna token per gestire le sessioni) [cite: 126, 130]
+    # 2. Tabella Utenti
+    # Aggiunto 'token_scadenza' per la sicurezza e 'data_registrazione' come timestamp utile
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS utenti (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
-            token TEXT
+            token TEXT,
+            token_scadenza DATETIME,
+            data_registrazione DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
-    # 3. Tabella Playlist_Video [cite: 106, 108]
+    # 3. Tabella Playlist (Contenitore principale)
+    # Definisce solo il nome della playlist e chi l'ha creata
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS playlist_video (
+        CREATE TABLE IF NOT EXISTS playlist (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             titolo_playlist TEXT NOT NULL,
             utente_id INTEGER NOT NULL,
-            film_id INTEGER,
-            FOREIGN KEY (utente_id) REFERENCES utenti (id),
-            FOREIGN KEY (film_id) REFERENCES film (id)
+            data_creazione DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (utente_id) REFERENCES utenti (id) ON DELETE CASCADE
         )
     """)
     
-    # 4. Tabella Elementi_Video (Commenti e Link YouTube) [cite: 9, 14, 15]
+    # 4. Tabella Playlist_Film (Tabella di collegamento molti-a-molti)
+    # Associa i film alle playlist. Se elimini una playlist o un film, le righe qui dentro si cancellano da sole
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS elementi_video (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+        CREATE TABLE IF NOT EXISTS playlist_film (
+            playlist_id INTEGER NOT NULL,
             film_id INTEGER NOT NULL,
-            url_video_youtube TEXT NOT NULL,
-            commento TEXT,
-            FOREIGN KEY (film_id) REFERENCES film (id)
+            data_aggiunta DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (playlist_id, film_id),
+            FOREIGN KEY (playlist_id) REFERENCES playlist (id) ON DELETE CASCADE,
+            FOREIGN KEY (film_id) REFERENCES film (id) ON DELETE CASCADE
         )
     """)
+    
+    # 5. Tabella Commenti
+    # Sostituisce elementi_video. Ora tiene traccia di QUALE utente ha commentato QUALE film e QUANDO
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS commenti (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            film_id INTEGER NOT NULL,
+            utente_id INTEGER NOT NULL,
+            testo TEXT NOT NULL,
+            data_commento DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (film_id) REFERENCES film (id) ON DELETE CASCADE,
+            FOREIGN KEY (utente_id) REFERENCES utenti (id) ON DELETE CASCADE
+        )
+    """)
+    
     conn.commit()
 
     # Popolamento iniziale se la tabella film è vuota
@@ -72,7 +97,8 @@ def dbinit():
             ("Star Wars: Una Nuova Speranza", "Luke Skywalker unisce le forze con un cavaliere Jedi, un pilota arrogante, un Wookiee e due droidi per salvare la galassia dall'arma di distruzione di massa dell'Impero, salvando la principessa Leia.", 1977, "https://www.themoviedb.org/t/p/w600_and_h900_face/aWq0skBAaZYzZFVdiJwqF0bU4NO.jpg", "11")
         ]
 
-        # Query di inserimento di massa (executemany cicla la lista in automatico)
+        # Inseriamo i dati definendo solo le colonne della lista fornita.
+        # La colonna "url_trailer" rimarrà temporaneamente NULL (vuota) per questi film, pronta per essere aggiornata in seguito.
         cursor.executemany("""
             INSERT INTO film (titolo, trama, anno, url_locandina, tmdb_id) 
             VALUES (?, ?, ?, ?, ?)
@@ -80,4 +106,8 @@ def dbinit():
 
         conn.commit()
         print("Inseriti con successo 15 film di prova nel database!")
-        conn.close()
+        
+    conn.close()
+
+if __name__ == "__main__":
+    dbinit()

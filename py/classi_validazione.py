@@ -11,6 +11,7 @@ class FilmIn(BaseModel):
     trama: str 
     anno: int 
     url_locandina: str 
+    url_video_youtube: str
     tmdb_id: str  # Gestito come stringa coerentemente con il DB
 
 # Modello per la creazione di una nuova playlist 
@@ -18,6 +19,5 @@ class PlaylistIn(BaseModel):
     titolo_playlist: str
 
 # Modello per l'aggiunta di un commento/video YouTube a un film
-class ElementoVideoIn(BaseModel):
-    url_video_youtube: str
+class CommentoIn(BaseModel):
     commento: str

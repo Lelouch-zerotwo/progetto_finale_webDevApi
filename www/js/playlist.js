@@ -1,9 +1,6 @@
-//const API_URL = "https://bookish-goggles-5vgg74gxjgww2r5w-8000.app.github.dev";
 const API_URL = "";
-
 const token = localStorage.getItem("session_token");
 let playlistSelezionata = "";
-
 
 if(!token) {            
     document.getElementById("areaBloccata").style.display = "block";
@@ -13,45 +10,57 @@ if(!token) {
     caricaSelettoreFilm();
 }
 
-// 1. Legge le playlist dal Back-end 
 async function caricaPlaylist() {
-    let res = await fetch(`${API_URL}/playlist?token=${token}`); 
+    let res = await fetch(`${API_URL}/playlist`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    }); 
+    
+    if(!res.ok) return;
+
     let liste = await res.json(); 
     let ul = document.getElementById("listaPlaylist");
     ul.innerHTML = liste.length === 0 ? "<p>Non hai ancora creato nessuna playlist.</p>" : "";
 
     liste.forEach(l => {
         let li = document.createElement("li");
-        li.textContent = l.titolo_playlist;
-        li.onclick = () => mostraDettaglio(l.titolo_playlist);
+        li.textContent = l.titolo; 
+        li.onclick = () => mostraDettaglio(l.titolo); 
         ul.appendChild(li);
     });
 }
 
-// 2. Crea una nuova playlist 
 async function creaNuovaPlaylist() {
     let titolo = document.getElementById("nomePlaylist").value.trim();
     if(!titolo) return;
 
-    let res = await fetch(`${API_URL}/playlist?token=${token}`, {
+    let res = await fetch(`${API_URL}/playlist`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ titolo_playlist: titolo })
+        headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ titolo: titolo })
     });
 
     if(res.ok) {
         alert("Playlist registrata!");
         document.getElementById("nomePlaylist").value = "";
         caricaPlaylist();
+    } else {
+        alert("Errore nella creazione della playlist.");
     }
 }
 
-// 3. Mostra i film associati tramite JOIN alla playlist cliccata 
 async function mostraDettaglio(titolo) {
     playlistSelezionata = titolo;
     document.getElementById("titoloPlaylistAttiva").textContent = "Dettaglio: " + titolo;
             
-    let res = await fetch(`${API_URL}/playlist/dettaglio?titolo=${encodeURIComponent(titolo)}&token=${token}`);
+    let res = await fetch(`${API_URL}/playlist/dettaglio?titolo=${encodeURIComponent(titolo)}`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    
     let film = await res.json();
             
     let grid = document.getElementById("gridFilmPlaylist");
@@ -67,7 +76,6 @@ async function mostraDettaglio(titolo) {
     document.getElementById("sezioneDettaglio").style.display = "block";
 }
 
-// 4. Popola il menu a tendina (select) prendendo tutti i film esistenti
 async function caricaSelettoreFilm() {
     let res = await fetch(`${API_URL}/film`);
     let film = await res.json();
@@ -81,13 +89,15 @@ async function caricaSelettoreFilm() {
     });
 }
 
-// 5. Salva la relazione film-playlist 
 async function aggiungiFilmAPlaylist() {
     let idFilm = document.getElementById("selectFilm").value;
     if(!idFilm || !playlistSelezionata) 
         return;
 
-    let res = await fetch(`${API_URL}/playlist/aggiungi-film?titolo_p=${encodeURIComponent(playlistSelezionata)}&id_f=${idFilm}&token=${token}`, {method: "POST"});
+    let res = await fetch(`${API_URL}/playlist/aggiungi-film?titolo_p=${encodeURIComponent(playlistSelezionata)}&id_f=${idFilm}`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
 
     if(res.ok) {
         alert("Film abbinato!");

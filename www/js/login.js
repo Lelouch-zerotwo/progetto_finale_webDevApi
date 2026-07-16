@@ -1,17 +1,47 @@
-//ricordarsi di mettere la porta 8000 pubblica
-        
-//const API_URL = "https://bookish-goggles-5vgg74gxjgww2r5w-8000.app.github.dev";
 const API_URL = "";
 
-function controllaStato() {
+async function controllaStato() {
     const token = localStorage.getItem("session_token");
     const box = document.getElementById("statoSessione");
-    if(token) {
-        box.style.color = "#16a34a";
-        box.textContent = "Sessione attiva. Sei loggato!";
-    } else {
+    
+    if(!token) {
         box.style.color = "#dc2626";
         box.textContent = "Nessun utente connesso.";
+        return;
+    }
+
+    try {
+        let res = await fetch(`${API_URL}/profilo`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        
+        if(res.ok) {
+            let dati = await res.json();
+            let dataScadenza = new Date(dati.scadenza + "Z"); 
+            let dataFormattata = dataScadenza.toLocaleString("it-IT");
+
+            box.style.color = "#16a34a";
+            // Prevenzione XSS: lasciamo uno span vuoto per l'username
+            box.innerHTML = `
+                Sessione attiva. Benvenuto <b id="nomeUtenteSicuro"></b>!<br>
+                <small style="color: #4b5563; margin-top:5px; display:block;">
+                    ⏳ Il tuo accesso scadrà il: ${dataFormattata}
+                </small>
+            `;
+            // Inseriamo l'username in modo sicuro come testo puro
+            document.getElementById("nomeUtenteSicuro").textContent = dati.username;
+
+        } else {
+            localStorage.removeItem("session_token");
+            box.style.color = "#dc2626";
+            box.textContent = "La sessione è scaduta o non è valida. Effettua di nuovo il login.";
+        }
+    } catch(e) {
+        box.style.color = "#d97706";
+        box.textContent = "Impossibile verificare lo stato della sessione al momento.";
     }
 }
 
@@ -34,8 +64,9 @@ async function eseguiRegistrazione() {
         alert("Registrazione completata!");
         document.getElementById("regUser").value = "";
         document.getElementById("regPass").value = "";
-    } else 
+    } else {
         alert("Errore: " + dati.detail); 
+    }
 }
 
 async function eseguiLogin() {
@@ -59,9 +90,10 @@ async function eseguiLogin() {
         document.getElementById("logUser").value = "";
         document.getElementById("logPass").value = "";
         controllaStato();
-    } else 
+    } else {
         alert("Accesso negato: " + dati.detail); 
     }
+}
 
 function eseguiLogout() {
     localStorage.removeItem("session_token");

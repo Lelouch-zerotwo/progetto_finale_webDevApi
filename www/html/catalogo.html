@@ -32,6 +32,7 @@
                 <input type="text" id="newPoster" class="input-poster" placeholder="URL Locandina">
                 <input type="text" id="newTmdb" class="input-tmdb" placeholder="ID TMDB">
             </div>
+            <input type="text" id="newTrailer" class="input-full" placeholder="URL Trailer YouTube (Opzionale)">
             <button class="btn-success btn-margine" onclick="inserisciFilmManuale()">Carica nel DB</button>
         </div>
 
@@ -56,7 +57,6 @@
 
             <div id="formRecensione">
                 <h4>Aggiungi la tua video recensione</h4>
-                <input type="text" id="recUrl" class="rec-input" placeholder="URL Video YouTube (es: https://youtube.com/...)">
                 <textarea id="recTesto" class="rec-textarea" placeholder="Inserisci il tuo commento testuale..."></textarea>
                 <input type="hidden" id="recFilmId">
                 <button class="btn-success" onclick="inviaCommentoVideo()">Invia Video Recensione</button>
