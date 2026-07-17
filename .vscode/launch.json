@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Avvia CineManiaci",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "py.main:app",
+                "--reload",
+                "--port",
+                "8000"
+            ],
+            "jinja": true,
+            "justMyCode": true,
+            /*
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "Application stratup complete",
+                "uriFormat": "http://localhost:8000/html/catalogo.html"
+            }
+            */
+        }
+    ]
+}

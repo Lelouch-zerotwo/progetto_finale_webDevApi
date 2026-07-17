@@ -39,7 +39,7 @@ def root():
 
 
 # Servizio dei file frontend sulla stessa porta 8000
-app.mount("/css", StaticFiles(directory=STATIC_DIR / "css"), name="css")
-app.mount("/js", StaticFiles(directory=STATIC_DIR / "js"), name="js")
-app.mount("/html", StaticFiles(directory=STATIC_DIR / "html"), name="html")
+#app.mount("/css", StaticFiles(directory=STATIC_DIR / "css"), name="css")
+#app.mount("/js", StaticFiles(directory=STATIC_DIR / "js"), name="js")
+#app.mount("/html", StaticFiles(directory=STATIC_DIR / "html"), name="html")
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="frontend")

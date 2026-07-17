@@ -1,0 +1,9 @@
+Per avviare il sito ci sono due modi:
+- IL CLASSICO:
+    apri un nouvo terminale e digiti il comando "uvicorn py.main:app --reload". Coparirà in basso allo schermo un pop-up con scritto
+    "Apri nel browser" cliccalo e ti manderà su una nuova schedda(del browser) dove c'è il sito funzionante
+
+- IL "MODERNO":
+    nella barra laterale clicci sul pulsante play(esegui con debug), aprirà una finestra dove in alto c'è una casella con il tasto 
+    play ed affinco la scritta "Avvia CineManiaci". 
+    Cliccalo e dopo qualche secondo si aprirà la WebApp, funzionante.
